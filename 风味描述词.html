@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>交互式风味轮 & 描述词拆解练习 | 食品感官分析</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: #f8f5f0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.07);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        h1 {
+            font-size: 1.8rem;
+            color: #4a3724;
+            text-align: center;
+        }
+        .subtitle {
+            text-align: center;
+            color: #8b7355;
+            margin-top: -10px;
+            font-size: 0.9rem;
+        }
+        .main-panel {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+        }
+        .wheel-section {
+            flex: 1;
+            min-width: 320px;
+            background: #fbfaf7;
+            border-radius: 20px;
+            padding: 15px;
+            border: 1px solid #e5ddd3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .wheel-title {
+            font-weight: 600;
+            color: #4a3724;
+            margin-bottom: 10px;
+        }
+        canvas {
+            width: 100%;
+            max-width: 400px;
+            height: auto;
+            cursor: pointer;
+        }
+        .info-box {
+            margin-top: 12px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 12px 16px;
+            border: 1px solid #e5ddd3;
+            min-height: 70px;
+            width: 100%;
+            font-size: 0.9rem;
+            color: #4a3724;
+            text-align: center;
+        }
+        .info-box strong {
+            color: #c48b3a;
+        }
+        .exercise-section {
+            flex: 1;
+            min-width: 300px;
+            background: #fbfaf7;
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid #e5ddd3;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .task-title {
+            font-weight: 700;
+            font-size: 1.2rem;
+            color: #4a3724;
+        }
+        .food-display {
+            background: #f3f8ec;
+            border-radius: 16px;
+            padding: 12px 18px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #3d6120;
+            text-align: center;
+        }
+        .selected-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 40px;
+            background: #fff;
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px dashed #c9dfb2;
+        }
+        .tag {
+            background: #f0e7d8;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #5d3a1a;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .tag button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            color: #b0413e;
+            font-weight: bold;
+            padding: 0 2px;
+        }
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            background: #e0d3c2;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 600;
+            color: #4a3724;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 0.9rem;
+        }
+        .btn:hover {
+            background: #cfbd9f;
+        }
+        .btn.primary {
+            background: #c48b3a;
+            color: white;
+        }
+        .btn.primary:hover {
+            background: #b07a2e;
+        }
+        .feedback {
+            background: #eef5f9;
+            border-radius: 12px;
+            padding: 12px;
+            font-size: 0.9rem;
+            color: #3a5568;
+            line-height: 1.5;
+        }
+        @media (max-width: 750px) {
+            .main-panel { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🌸 交互式风味轮 · 描述词拆解</h1>
+    <p class="subtitle">点击扇形展开/收缩层级 · 拖拽描述词到右侧完成拆解练习</p>
+    <div class="main-panel">
+        <!-- 风味轮区域 -->
+        <div class="wheel-section">
+            <div class="wheel-title">🔍 风味轮</div>
+            <canvas id="flavorCanvas" width="400" height="400"></canvas>
+            <div class="info-box" id="wheelInfo">
+                <span>👆 点击扇形查看子类别及香气化合物</span>
+            </div>
+        </div>
+        <!-- 拆解练习区域 -->
+        <div class="exercise-section">
+            <div class="task-title">📝 描述词拆解练习</div>
+            <div class="food-display" id="foodName">草莓酸奶</div>
+            <p style="color:#5d3a1a; font-size:0.9rem;">从风味轮点击选择你认为存在的描述词（可点击右侧“+”），然后提交查看答案。</p>
+            <div class="selected-tags" id="selectedTags">
+                <span style="color:#999; font-style:italic;">尚未选择描述词</span>
+            </div>
+            <div class="btn-group">
+                <button class="btn primary" id="submitBtn">✅ 提交答案</button>
+                <button class="btn" id="resetBtn">🔄 清空选择</button>
+                <button class="btn" id="newTaskBtn">🎲 换一个食品</button>
+            </div>
+            <div class="feedback" id="feedbackBox">
+                💡 提示：先浏览风味轮，再挑选恰当的香气/风味描述词。
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============ 风味轮数据 ============
+    const flavorData = {
+        name: '风味轮',
+        children: [
+            {
+                name: '果香',
+                color: '#f5a97f',
+                children: [
+                    { name: '仁果类', color: '#f7c29e', compounds: ['乙酸异戊酯（香蕉）', '己酸乙酯（苹果）'] },
+                    { name: '柑橘类', color: '#f9d99a', compounds: ['柠檬烯（柠檬）', '芳樟醇（橙花）'] },
+                    { name: '浆果类', color: '#e8a0bf', compounds: ['邻氨基苯甲酸甲酯（葡萄）', 'γ-癸内酯（桃子）'] }
+                ]
+            },
+            {
+                name: '花香',
+                color: '#e8b4b8',
+                children: [
+                    { name: '白花', color: '#f2cdcf', compounds: ['芳樟醇（铃兰）', '苯乙醇（玫瑰）'] },
+                    { name: '甜花香', color: '#f5dedb', compounds: ['香叶醇（天竺葵）', 'β-紫罗兰酮（紫罗兰）'] }
+                ]
+            },
+            {
+                name: '焙烤/坚果香',
+                color: '#d4b48c',
+                children: [
+                    { name: '焦糖/烘烤', color: '#dec49b', compounds: ['麦芽酚（焦糖）', '2-乙酰基吡咯（面包皮）'] },
+                    { name: '坚果', color: '#c9aa7a', compounds: ['苯甲醛（杏仁）', '2-甲基吡嗪（花生）'] }
+                ]
+            },
+            {
+                name: '异味/缺陷',
+                color: '#b0b0b0',
+                children: [
+                    { name: '氧化味', color: '#c5c5c5', compounds: ['己醛（油脂酸败）', '反-2-壬烯醛（纸板味）'] },
+                    { name: '发酵异味', color: '#adadad', compounds: ['丁酸（酸败奶油）', '4-乙基苯酚（马厩味）'] }
+                ]
+            }
+        ]
+    };
+
+    // ============ 练习题库 ============
+    const exerciseBank = [
+        {
+            food: '草莓酸奶',
+            correctDescriptors: ['浆果类', '仁果类', '甜花香', '焦糖/烘烤']
+        },
+        {
+            food: '现磨咖啡',
+            correctDescriptors: ['焦糖/烘烤', '坚果', '仁果类']
+        },
+        {
+            food: '新鲜橙汁',
+            correctDescriptors: ['柑橘类', '仁果类']
+        },
+        {
+            food: '全麦面包',
+            correctDescriptors: ['焦糖/烘烤', '坚果', '氧化味']
+        },
+        {
+            food: '蜜桃乌龙茶',
+            correctDescriptors: ['浆果类', '仁果类', '白花', '甜花香']
+        }
+    ];
+
+    // ============ 状态管理 ============
+    let currentPath = [];           // 当前展开的路径，如 ['果香', '仁果类']
+    let selectedDescriptors = [];  // 练习中已选择的描述词（子类名称）
+    let currentExercise = exerciseBank[0];
+
+    // ============ Canvas 初始化 ============
+    const canvas = document.getElementById('flavorCanvas');
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    const centerX = width / 2;
+    const centerY = height / 2;
+    const baseRadius = 140;
+    const arcPadding = 2; // 弧度间隔
+
+    // 根据当前路径决定显示层级
+    function getVisibleNodes() {
+        let nodes = flavorData.children;
+        if (currentPath.length === 0) {
+            // 显示大类
+            return nodes.map(n => ({ name: n.name, color: n.color, type: 'category', children: n.children }));
+        } else if (currentPath.length === 1) {
+            // 找到对应大类，显示其子类
+            const category = nodes.find(n => n.name === currentPath[0]);
+            if (!category) return [];
+            return category.children.map(c => ({
+                name: c.name,
+                color: c.color,
+                type: 'subcategory',
+                compounds: c.compounds
+            }));
+        }
+        return [];
+    }
+
+    // 绘制风味轮
+    function drawWheel() {
+        ctx.clearRect(0, 0, width, height);
+        const visibleNodes = getVisibleNodes();
+        if (visibleNodes.length === 0) {
+            drawBackgroundText('点击大类展开');
+            return;
+        }
+
+        const total = visibleNodes.length;
+        const angleStep = (2 * Math.PI) / total;
+
+        visibleNodes.forEach((node, i) => {
+            const startAngle = i * angleStep + arcPadding * 0.1;
+            const endAngle = (i + 1) * angleStep - arcPadding * 0.1;
+            const midAngle = startAngle + (endAngle - startAngle) / 2;
+
+            // 绘制扇形
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY);
+            ctx.arc(centerX, centerY, baseRadius, startAngle, endAngle);
+            ctx.closePath();
+            ctx.fillStyle = node.color;
+            ctx.fill();
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // 绘制文字
+            ctx.save();
+            ctx.translate(centerX, centerY);
+            ctx.rotate(midAngle);
+            ctx.textAlign = 'center';
+            ctx.fillStyle = '#3d2b1f';
+            ctx.font = 'bold 13px "Microsoft YaHei"';
+            const textRadius = baseRadius * 0.65;
+            ctx.fillText(node.name, textRadius, 5);
+            ctx.restore();
+
+            // 如果是子类且展开了，可以显示化合物提示（通过点击后的信息面板显示）
+        });
+
+        // 如果有当前路径，在中心显示返回按钮样式
+        if (currentPath.length > 0) {
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, 28, 0, 2 * Math.PI);
+            ctx.fillStyle = '#f0e7d8';
+            ctx.fill();
+            ctx.fillStyle = '#5d3a1a';
+            ctx.font = 'bold 14px "Microsoft YaHei"';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('↩', centerX, centerY);
+        }
+    }
+
+    function drawBackgroundText(text) {
+        ctx.fillStyle = '#aaa';
+        ctx.font = 'italic 14px "Microsoft YaHei"';
+        ctx.textAlign = 'center';
+        ctx.fillText(text, centerX, centerY);
+    }
+
+    // 获取点击的节点
+    function getNodeAtAngle(angle) {
+        const visibleNodes = getVisibleNodes();
+        if (visibleNodes.length === 0) return null;
+        const total = visibleNodes.length;
+        const angleStep = (2 * Math.PI) / total;
+        // 标准化角度到0~2PI
+        let normAngle = angle % (2 * Math.PI);
+        if (normAngle < 0) normAngle += 2 * Math.PI;
+        const index = Math.floor(normAngle / angleStep);
+        return visibleNodes[index] || null;
+    }
+
+    // 处理画布点击
+    canvas.addEventListener('click', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;   // canvas物理像素比例
+        const scaleY = canvas.height / rect.height;
+        const mouseX = (e.clientX - rect.left) * scaleX;
+        const mouseY = (e.clientY - rect.top) * scaleY;
+
+        const dx = mouseX - centerX;
+        const dy = mouseY - centerY;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+
+        // 如果点击中心返回按钮
+        if (currentPath.length > 0 && dist < 28) {
+            currentPath.pop();
+            drawWheel();
+            updateInfoBox();
+            return;
+        }
+
+        if (dist > baseRadius || dist < 20) return;
+
+        let angle = Math.atan2(dy, dx);
+        if (angle < 0) angle += 2 * Math.PI;
+        const node = getNodeAtAngle(angle);
+        if (!node) return;
+
+        if (node.type === 'category') {
+            // 进入子类
+            currentPath = [node.name];
+            drawWheel();
+            updateInfoBox();
+        } else if (node.type === 'subcategory') {
+            // 显示化合物信息，并可通过按钮添加到练习
+            updateInfoBox(node);
+            // 提供快速添加按钮？我们在信息框里放一个添加按钮，通过全局函数处理
+        }
+    });
+
+    // 更新信息面板
+    function updateInfoBox(selectedNode = null) {
+        const box = document.getElementById('wheelInfo');
+        if (currentPath.length === 0 && !selectedNode) {
+            box.innerHTML = '<span>👆 点击扇形查看子类别及香气化合物</span>';
+            return;
+        }
+        if (selectedNode && selectedNode.type === 'subcategory') {
+            let html = `<strong>${selectedNode.name}</strong><br>`;
+            html += `代表化合物：${selectedNode.compounds.join('、')}<br>`;
+            html += `<button class="btn" style="padding:4px 12px; font-size:0.8rem; margin-top:5px;" 
+                     onclick="addDescriptor('${selectedNode.name}')">➕ 添加为描述词</button>`;
+            box.innerHTML = html;
+        } else if (currentPath.length === 1) {
+            const category = flavorData.children.find(c => c.name === currentPath[0]);
+            box.innerHTML = `<strong>${currentPath[0]}</strong> 的子类别，点击扇形查看或添加描述词。`;
+        }
+    }
+
+    // ============ 练习功能 ============
+    function addDescriptor(name) {
+        if (!selectedDescriptors.includes(name)) {
+            selectedDescriptors.push(name);
+            renderSelectedTags();
+        }
+    }
+
+    function removeDescriptor(name) {
+        selectedDescriptors = selectedDescriptors.filter(d => d !== name);
+        renderSelectedTags();
+    }
+
+    function renderSelectedTags() {
+        const container = document.getElementById('selectedTags');
+        if (selectedDescriptors.length === 0) {
+            container.innerHTML = '<span style="color:#999; font-style:italic;">尚未选择描述词</span>';
+            return;
+        }
+        container.innerHTML = selectedDescriptors.map(d =>
+            `<span class="tag">${d} <button onclick="removeDescriptor('${d}')">×</button></span>`
+        ).join('');
+    }
+
+    function resetSelection() {
+        selectedDescriptors = [];
+        renderSelectedTags();
+        document.getElementById('feedbackBox').innerHTML = '💡 提示：先浏览风味轮，再挑选恰当的香气/风味描述词。';
+    }
+
+    function loadNewExercise() {
+        const randomIndex = Math.floor(Math.random() * exerciseBank.length);
+        currentExercise = exerciseBank[randomIndex];
+        document.getElementById('foodName').textContent = currentExercise.food;
+        resetSelection();
+    }
+
+    function submitAnswer() {
+        const correct = currentExercise.correctDescriptors;
+        const user = selectedDescriptors;
+        const correctSet = new Set(correct);
+        const userSet = new Set(user);
+
+        // 计算准确率
+        const intersection = [...userSet].filter(d => correctSet.has(d));
+        const extra = [...userSet].filter(d => !correctSet.has(d));
+        const missing = [...correctSet].filter(d => !userSet.has(d));
+
+        let feedbackHtml = '';
+        if (intersection.length === correct.length && extra.length === 0) {
+            feedbackHtml = '🎉 完全正确！你对这个食品的风味拆解非常到位。';
+        } else {
+            feedbackHtml = `✅ 正确选择：${intersection.length > 0 ? intersection.join('、') : '无'}<br>`;
+            if (extra.length > 0) feedbackHtml += `❌ 多余选择：${extra.join('、')}<br>`;
+            if (missing.length > 0) feedbackHtml += `⚠️ 遗漏描述词：${missing.join('、')}<br>`;
+            feedbackHtml += `💡 标准答案包含：${correct.join('、')}`;
+        }
+        document.getElementById('feedbackBox').innerHTML = feedbackHtml;
+    }
+
+    // 按钮事件
+    document.getElementById('submitBtn').addEventListener('click', submitAnswer);
+    document.getElementById('resetBtn').addEventListener('click', resetSelection);
+    document.getElementById('newTaskBtn').addEventListener('click', loadNewExercise);
+
+    // 初始绘制
+    drawWheel();
+    loadNewExercise();
+
+    // 暴露给全局
+    window.addDescriptor = addDescriptor;
+    window.removeDescriptor = removeDescriptor;
+</script>
+</body>
+</html>
